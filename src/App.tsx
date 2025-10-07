@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
@@ -7,9 +7,64 @@ import Ventas from './pages/Ventas';
 import Inventario from './pages/Inventario';
 import Historial from './pages/Historial';
 import UsuariosPage from './pages/Usuarios';
+import Login from './pages/Login';
+import { Usuario } from './types';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentUser, setCurrentUser] = useState<Usuario | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('currentUser');
+      }
+    }
+  }, []);
+
+  const handleLoginSuccess = (usuario: Usuario) => {
+    setCurrentUser(usuario);
+    setIsAuthenticated(true);
+    localStorage.setItem('currentUser', JSON.stringify(usuario));
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('currentUser');
+    setCurrentPage('dashboard');
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+            success: {
+              iconTheme: {
+                primary: '#4AED50',
+                secondary: '#FFFAEE',
+              },
+            },
+          }}
+        />
+        <Login onLoginSuccess={handleLoginSuccess} />
+      </>
+    );
+  }
 
   const getPageTitle = () => {
     const titles: { [key: string]: string } = {
@@ -59,9 +114,9 @@ function App() {
       />
       
       <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
-        <Header title={getPageTitle()} />
+        <Header title={getPageTitle()} currentUser={currentUser} onLogout={handleLogout} />
         
         <main className="flex-1 overflow-y-auto p-6 lg:ml-0">
           <div className="max-w-7xl mx-auto">

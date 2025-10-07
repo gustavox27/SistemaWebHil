@@ -3,6 +3,7 @@ export interface Usuario {
   nombre: string;
   telefono?: string;
   dni: string;
+  perfil: 'Administrador' | 'Vendedor' | 'Almacenero' | 'Cliente';
   created_at?: string;
 }
 
